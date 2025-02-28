@@ -20,7 +20,14 @@ const getStatusText = (item) => {
   return "planned";
 };
 
-// 1. Fetch GitHub repositories
+// Helper function to determine step icon
+const getStepIcon = (step) => {
+  if (step.completed) return '✔'; // Completed
+  if (step.current) return '🛠️';   // Currently working on
+  return '⏳';                     // Planned (Not started)
+};
+
+// Fetch GitHub repositories
 const res = await fetch(
   `https://api.github.com/users/${githubUsername}/repos?sort=updated`,
   {
@@ -35,7 +42,7 @@ const repos = allRepos.sort(
   (a, b) => new Date(b.pushed_at).valueOf() - new Date(a.pushed_at).valueOf()
 );
 
-// 2. Load dynamic goals from YAML file
+// Load dynamic goals from YAML file
 const file = fs.readFileSync('./goals.yaml', 'utf8');
 const { goals } = yaml.parse(file);
 
@@ -132,8 +139,12 @@ const metadata = {
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">✅ Steps:</p>
                         <ul class="space-y-1 text-sm">
                           {ms.steps.map((step, sIndex) => (
-                            <li key={step.name} class={`flex items-center ${step.completed ? 'text-green-500' : 'text-gray-500'}`}>
-                              {step.completed ? '✔' : '⏳'} {step.name}
+                            <li key={step.name} class={`flex items-center ${
+                              step.completed ? 'text-green-500' : 
+                              step.current ? 'text-yellow-500' : 
+                              'text-gray-500'
+                            }`}>
+                              {getStepIcon(step)} {step.name}
                             </li>
                           ))}
                         </ul>

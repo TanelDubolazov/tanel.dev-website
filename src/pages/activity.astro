@@ -1,0 +1,229 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+const token = import.meta.env.GITHUB_TOKEN;
+const githubUsername = import.meta.env.GITHUB_USERNAME;
+
+
+// Helper function to determine badge color
+const getBadgeColor = (item) => {
+  if (item.completed) return "bg-green-500";
+  if (item.current) return "bg-yellow-500";
+  return "bg-red-500";
+};
+
+// Helper function to get status text
+const getStatusText = (item) => {
+  if (item.completed) return "done";
+  if (item.current) return "in progress";
+  return "planned";
+};
+
+// 1. Fetch your public repos from GitHub
+const res = await fetch(
+  `https://api.github.com/users/${githubUsername}/repos?sort=updated`,
+  {
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+const allRepos = await res.json();
+
+// 2. Sort them by last commit (pushed_at) descending
+const repos = allRepos.sort(
+  (a, b) => new Date(b.pushed_at).valueOf() - new Date(a.pushed_at).valueOf()
+);
+
+// Define your dynamic goals with milestones.
+const goals = [
+{
+    project: 'kood/johvi',
+    milestones: [
+      { name: 'Go Completion', date: 'Feb 25, 2025', completed: true },
+      { name: 'JavaScript Completion', date: 'Mar 15, 2025', completed: true },
+      { name: 'DevOps Completion', date: 'Expected Apr 2025', completed: false, current: true },
+    ],
+  },
+  {
+    "project": "DevOps focus",
+    "milestones": [
+        { 
+            "name": "Kood/johvi DevOps module", 
+            "date": "Expected Apr 2025", 
+            "completed": false,
+            "current" : true,
+            "steps": [
+                { "name": "Deep-in-net", "completed": true },
+                { "name": "Deep-in-system", "completed": true },
+                { "name": "crud-master", "completed": true },
+                { "name": "play-with-containers", "completed": true },
+                { "name": "orchestrator", "completed": false, "current": true },
+                { "name": "cloud-design", "completed": false },
+                { "name": "code-keeper", "completed": false }
+            ]
+        },
+        { 
+            "name": "Online Resume/Blog CI/CD", 
+            "date": "Feb 26, 2025", 
+            "completed": true,
+            "current": false  
+        },
+        { 
+            "name": "Terraform associate exam 003", 
+            "date": "Expected March 2025", 
+            "current" : true,
+            "completed": false,
+            "steps": [  
+                { "name": "Learning", "completed": true },
+                { "name": "Using Terraform", "completed": false, "current": true },
+                { "name": "Trial exam", "completed": false },
+                { "name": "Full exam", "completed": false }
+            ]
+        },
+        { 
+            "name": "Kubernetes Certification (CKA or CKAD)", 
+            "date": "Expected May 2025", 
+            "completed": false,
+            "steps": [  
+                { "name": "Cluster setup & management", "completed": false },
+                { "name": "RBAC & security", "completed": false },
+                { "name": "Pod scheduling & networking", "completed": false },
+                { "name": "Logging, monitoring & troubleshooting", "completed": false, "current": false },
+                { "name": "Trial exam", "completed": false },
+                { "name": "Full exam", "completed": false }
+            ]
+        },
+        { 
+            "name": "GitOps & Infrastructure as Code (IaC) Project", 
+            "date": "Expected June 2025", 
+            "completed": false,
+            "steps": [  
+                { "name": "Advanced GitOps principles", "completed": false },
+                { "name": "Setup ArgoCD/Flux", "completed": false },
+                { "name": "Automate deployments", "completed": false, "current": false },
+                { "name": "Production-ready infrastructure setup", "completed": false }
+            ]
+        }
+    ]
+}
+];
+
+const metadata = {
+  title: 'GitHub Projects',
+  description: 'My repositories, sorted by last commit date',
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Hero Section -->
+  <section class="relative py-16 bg-blue-50 dark:bg-transparent">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
+        Current goals &amp; Activity
+      </h1>
+      <p class="max-w-2xl mx-auto text-gray-600 dark:text-gray-300">
+        This page has a collection of my active public projects <br> and goals to improve myself.
+      </p>
+    </div>
+  </section>
+
+  <!-- GitHub Repos Section -->
+  <section class="relative py-10 dark:bg-gray-900">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto text-center mb-8">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl mb-3">
+          Latest Commits
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400">
+          Check out my recent activity on GitHub!
+        </p>
+      </div>
+      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {repos.map((repo) => (
+          <div key={repo.id} class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              {repo.name}
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <strong>Last commit:</strong> {new Date(repo.pushed_at).toLocaleString()}
+            </p>
+            <p class="text-gray-700 dark:text-gray-300 mb-3">
+              {repo.description || 'No description provided.'}
+            </p>
+            <a
+              href={repo.html_url}
+              class="inline-block mt-2 text-blue-600 dark:text-blue-400 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View on GitHub
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Goals & Milestones Timeline Section -->
+  <section class="relative py-10 dark:bg-gray-900">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto text-center mb-8">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl mb-3">
+          Goals &amp; Milestones
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400">
+          Visual timeline of projects and/or self improvement plans with their milestones and expected completions.
+        </p>
+      </div>
+      {goals.map((goal) => (
+        <details key={goal.project} open class="mb-12">
+          <summary class="text-xl font-semibold text-gray-900 dark:text-white mb-4 cursor-pointer">
+            {goal.project}
+          </summary>
+          <div class="relative border-l-2 border-gray-300 dark:border-gray-700 ml-6">
+            {goal.milestones.map((ms, mIndex) => (
+              <div key={ms.name} class="mb-8 ml-6 relative">
+                <span class={`absolute -left-6 top-0 flex items-center justify-center w-5 h-5 rounded-full ${getBadgeColor(ms)} text-white`}>
+                  {ms.completed ? (
+                    <span class="iconify" data-icon="tabler:check" aria-hidden="true"></span>
+                  ) : (
+                    <span class="iconify" data-icon="tabler:clock" aria-hidden="true"></span>
+                  )}
+                </span>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    <span class="mr-2 font-bold">{mIndex + 1}.</span> {ms.name}
+                    <span class="ml-2 text-xs text-gray-500">({getStatusText(ms)})</span>
+                  </p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">{ms.date}</p>
+                  {ms.steps && ms.steps.length > 0 && (
+                    <div class="mt-4 ml-4 border-l-2 border-blue-300 pl-4">
+                      <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Steps:</p>
+                      <div class="flex items-center space-x-4">
+                        {ms.steps.map((step, sIndex) => {
+                          const letter = String.fromCharCode(97 + sIndex);
+                          return (
+                            <div key={step.name} class="flex flex-col items-center">
+                              <span class="mb-1 text-xs text-gray-500">({getStatusText(step)})</span>
+                              <div class={`w-8 h-8 rounded-full ${getBadgeColor(step)} text-white flex items-center justify-center text-sm font-bold`}>
+                                {mIndex + 1}.{letter}
+                              </div>
+                              <span class="mt-1 text-xs text-gray-700 dark:text-gray-300 text-center">
+                                {step.name}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+  </section>
+</Layout>
